@@ -1,0 +1,16 @@
+{
+  "name": "geology-chatbot",
+  "version": "1.0.0",
+  "description": "Geology-info site chatbot (server + embeddable widget)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "node-fetch": "^2.6.7",
+    "dotenv": "^16.0.3",
+    "express-rate-limit": "^6.7.0",
+    "cors": "^2.8.5"
+  }
+}

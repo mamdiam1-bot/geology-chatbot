@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Geology Info Chat</title>
+  <style>
+    body{font-family:system-ui,Arial;margin:0}
+    #chatContainer{display:flex;flex-direction:column;height:100vh;max-height:700px;border:1px solid #ddd;border-radius:8px;overflow:hidden;background:#ffffff}
+    #header{padding:10px;border-bottom:1px solid #eee}
+    #messages{flex:1;padding:10px;overflow:auto;background:#fafafa}
+    .msg{margin-bottom:8px;max-width:85%;}
+    .user{align-self:flex-end;text-align:right;background:#e6f7ff;padding:8px;border-radius:8px}
+    .assistant{align-self:flex-start;text-align:left;background:#f1f1f1;padding:8px;border-radius:8px}
+    #inputRow{display:flex;padding:10px;border-top:1px solid #eee}
+    #input{flex:1;padding:8px;border-radius:6px;border:1px solid #ccc}
+    button{margin-left:8px;padding:8px 12px;border-radius:6px}
+  </style>
+</head>
+<body>
+  <div id="chatContainer" role="application" aria-label="Geology Info Chat">
+    <div id="header"><strong>Geology Info Assistant</strong></div>
+    <div id="messages" aria-live="polite"></div>
+    <div id="inputRow">
+      <input id="input" placeholder="Ask a question..." aria-label="Ask a question" />
+      <button id="send">Send</button>
+    </div>
+  </div>
+
+<script>
+const messagesEl = document.getElementById('messages');
+const input = document.getElementById('input');
+const send = document.getElementById('send');
+
+function detectLang(text){
+  // simple heuristic: Hebrew chars, Arabic chars, else English
+  if (/[֐-׿]/.test(text)) return 'he';
+  if (/[؀-ۿ]/.test(text)) return 'ar';
+  return 'en';
+}
+
+function append(role, text){
+  const d = document.createElement('div'); d.className = 'msg ' + role; d.textContent = text; messagesEl.appendChild(d); messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+async function sendMessage(){
+  const text = input.value.trim(); if(!text) return;
+  append('user', text);
+  input.value = '';
+  const lang = detectLang(text);
+  const payload = { messages: [ { role: 'user', content: text } ] };
+  try {
+    const serverUrl = (window.SERVER_URL || '');
+    const resp = await fetch((serverUrl) + '/api/chat', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    if(!resp.ok){
+      append('assistant', 'Server error: ' + resp.statusText);
+      return;
+    }
+    const data = await resp.json();
+    const assistant = data.assistant?.content || 'No answer.';
+    append('assistant', assistant);
+  } catch(e){
+    append('assistant', 'Communication error: ' + e.message);
+  }
+}
+
+send.addEventListener('click', sendMessage);
+input.addEventListener('keydown', e => { if(e.key === 'Enter') sendMessage(); });
+</script>
+</body>
+</html>
